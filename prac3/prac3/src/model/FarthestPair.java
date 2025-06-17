@@ -1,0 +1,62 @@
+package model;
+
+import java.util.*;
+
+public class FarthestPair {
+
+    public static Point[] findFarthestPair(Point[] points) {
+        if (points.length < 2) return null;
+        if (points.length == 2) return new Point[]{points[0], points[1]};
+
+        List<Point> hull = convexHull(points);
+        int n = hull.size();
+        double maxDist = 0.0;
+        Point p1 = null, p2 = null;
+
+        int j = 1;
+        for (int i = 0; i < n; i++) {
+            while (area2(hull.get(i), hull.get((i + 1) % n), hull.get((j + 1) % n)) >
+                    area2(hull.get(i), hull.get((i + 1) % n), hull.get(j))) {
+                j = (j + 1) % n;
+            }
+            double dist = hull.get(i).distanceTo(hull.get(j));
+            if (dist > maxDist) {
+                maxDist = dist;
+                p1 = hull.get(i);
+                p2 = hull.get(j);
+            }
+        }
+        return new Point[]{p1, p2};
+    }
+
+    private static List<Point> convexHull(Point[] points) {
+        List<Point> pts = new ArrayList<>(Arrays.asList(points));
+        pts.sort(Comparator.comparingDouble((Point p) -> p.x).thenComparingDouble(p -> p.y));
+
+        List<Point> lower = new ArrayList<>();
+        for (Point p : pts) {
+            while (lower.size() >= 2 && area2(lower.get(lower.size()-2), lower.get(lower.size()-1), p) <= 0) {
+                lower.remove(lower.size() - 1);
+            }
+            lower.add(p);
+        }
+
+        List<Point> upper = new ArrayList<>();
+        for (int i = pts.size() - 1; i >= 0; i--) {
+            Point p = pts.get(i);
+            while (upper.size() >= 2 && area2(upper.get(upper.size()-2), upper.get(upper.size()-1), p) <= 0) {
+                upper.remove(upper.size() - 1);
+            }
+            upper.add(p);
+        }
+
+        lower.remove(lower.size() - 1);
+        upper.remove(upper.size() - 1);
+        lower.addAll(upper);
+        return lower;
+    }
+
+    private static double area2(Point a, Point b, Point c) {
+        return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    }
+}
